@@ -34,7 +34,7 @@ then
 	echo
 
 	echo "Unloading the LaunchAgent..."
-	launchctl unload ~/Library/LaunchAgents/de.bernhard-baehr.sleepwatcher-20compatibility-localuser.plist &> /dev/null
+	launchctl unload ~/Library/LaunchAgents/de.bernhard-baehr.sleepwatcher.plist &> /dev/null
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
 	read
@@ -49,14 +49,7 @@ then
 	echo
 
 	echo "Removing Sleepwatcher 2.2.1 and all the files ..."
-	sudo rm -r /usr/local/Cellar/sleepwatcher &> /dev/null
-	sudo rm -r /usr/local/etc/sleepwatcher &> /dev/null
-	sudo rm ~/Library/LaunchAgents/de.bernhard-baehr.sleepwatcher-20compatibility-localuser.plist &> /dev/null
-  	#sudo rm /usr/local/share/man/man8/sleepwatcher.8 &> /dev/null
-  	#sudo rm /etc/rc.sleep &> /dev/null
-  	#sudo rm /etc/rc.wakeup &> /dev/null
-  	#sudo rm -r /Library/StartupItems/SleepWatcher &> /dev/null
-	sudo rm /usr/local/sbin/sleepwatcher &> /dev/null
+	brew uninstall sleepwatcher
 
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
@@ -106,41 +99,68 @@ then
 	echo
 
 	echo "Creating the sleep script ..."
+		rm -rf ~/.sleep
 		touch ~/.sleep
 		chmod u+x ~/.sleep
 		echo "#! /bin/bash" > ~/.sleep
 		echo "echo" >> ~/.sleep
-		echo "echo `date` \"Sleeping\" >> /tmp/sleep.log" >> ~/.sleep
+		echo "echo $(date "+%Y-%m-%d %H:%M:%S") \"Sleeping\" >> /tmp/sleep.log" >> ~/.sleep
 		echo "/usr/sbin/networksetup setairportpower en0 off" >> ~/.sleep
-		echo "echo `date` `/usr/sbin/networksetup getairportpower en0` >> /tmp/sleep.log" >> ~/.sleep
+		echo "echo $(date "+%Y-%m-%d %H:%M:%S") `/usr/sbin/networksetup getairportpower en0` >> /tmp/sleep.log" >> ~/.sleep
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
 	read
 	echo
 
 	echo "Creating the wake script ..."
+		rm -rf ~/.wakeup
 		touch ~/.wakeup
 		chmod u+x ~/.wakeup
 		echo "#! /bin/bash" > ~/.wakeup
 		echo "echo" >> ~/.wakeup
-		echo "echo `date` \"Waking up\" >> /tmp/sleep.log" >> ~/.wakeup
+		echo "echo $(date "+%Y-%m-%d %H:%M:%S") \"Waking up\" >> /tmp/sleep.log" >> ~/.wakeup
 		echo "sleep 7" >> ~/.wakeup
 		echo "/usr/sbin/networksetup setairportpower en0 on" >> ~/.wakeup
-		echo "echo `date` `/usr/sbin/networksetup getairportpower en0` >> /tmp/sleep.log" >> ~/.wakeup
+		echo "echo $(date "+%Y-%m-%d %H:%M:%S") `/usr/sbin/networksetup getairportpower en0` >> /tmp/sleep.log" >> ~/.wakeup
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
 	read
 	echo
 
-	echo "Copying *.plist file to ~/Library/LaunchAgents ..."
-	cp /usr/local/Cellar/sleepwatcher/2.2.1.1/de.bernhard-baehr.sleepwatcher-20compatibility-localuser.plist ~/Library/LaunchAgents
+	echo "Create plist file and copy to ~/Library/LaunchAgents ..."
+
+	plistPath="/tmp/de.bernhard-baehr.sleepwatcher.plist"
+	rm -rf ${plistPath} 
+	touch ${plistPath}
+	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" >> ${plistPath}
+	echo "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" >> ${plistPath}
+	echo "<plist version=\"1.0\">" >> ${plistPath}
+	echo "<dict>" >> ${plistPath}
+	echo "	<key>Label</key>" >> ${plistPath}
+	echo "	<string>de.bernhard-baehr.sleepwatcher</string>" >> ${plistPath}
+	echo "	<key>ProgramArguments</key>" >> ${plistPath}
+	echo "	<array>" >> ${plistPath}
+	echo "		<string>/usr/local/sbin/sleepwatcher</string>" >> ${plistPath}
+	echo "		<string>-V</string>" >> ${plistPath}
+	echo "		<string>-s ~/.sleep</string>" >> ${plistPath}
+	echo "		<string>-w ~/.wakeup</string>" >> ${plistPath}
+	echo "	</array>" >> ${plistPath}
+	echo "	<key>RunAtLoad</key>" >> ${plistPath}
+	echo "	<true/>" >> ${plistPath}
+	echo "	<key>KeepAlive</key>" >> ${plistPath}
+	echo "	<true/>" >> ${plistPath}
+	echo "</dict>" >> ${plistPath}
+	echo "</plist>" >> ${plistPath}
+	
+	mv ${plistPath} ~/Library/LaunchAgents
+
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
 	read
 	echo
 
 	echo "Starting PleaseSleep"
-	launchctl load ~/Library/LaunchAgents/de.bernhard-baehr.sleepwatcher-20compatibility-localuser.plist
+	launchctl load ~/Library/LaunchAgents/de.bernhard-baehr.sleepwatcher.plist
 	echo "Done."
 	echo "(Press ENTER key to continue.)"
 	read
